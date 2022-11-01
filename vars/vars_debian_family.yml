@@ -1,0 +1,10 @@
+---
+
+web_user: "www-data"
+icinga2_user: "nagios"
+monitoring_plugins: "monitoring-plugins"
+
+repo:
+  bin: "deb {{ packages_url }}{{ ansible_distribution | lower }} icinga-{{ ansible_distribution_release }} main"
+  src: "deb-src {{ packages_url }}{{ ansible_distribution | lower }} icinga-{{ ansible_distribution_release }} main"
+

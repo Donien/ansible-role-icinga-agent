@@ -1,0 +1,14 @@
+---
+
+icinga2_port: 5665
+accept_config: true
+accept_commands: true
+disable_confd: true
+force_setup: false
+
+global_zones:
+  - "director-global"
+
+install_check_plugins: true
+install_src: false
+

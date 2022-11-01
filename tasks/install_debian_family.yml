@@ -1,0 +1,41 @@
+---
+
+- name: Install prerequisites
+  become: yes
+  apt:
+    state: present
+    name: "gnupg"
+
+- name: Add gpg key
+  become: yes
+  apt_key:
+    url: "{{ packages_key }}"
+
+- name: Add repository
+  become: yes
+  apt_repository:
+    state: present
+    repo: "{{ repo.bin }}"
+    filename: "{{ ansible_distribution_release }}-icinga"
+
+- name: Add repository (src)
+  become: yes
+  apt_repository:
+    state: present
+    repo: "{{ repo.bin }}"
+    filename: "{{ ansible_distribution_release }}-icinga"
+  when: install_src
+
+- name: Install Icinga 2
+  become: yes
+  apt:
+    state: present
+    update_cache: true
+    name: "icinga2"
+
+- name: Install monitoring plugins
+  become: yes
+  apt:
+    state: present
+    name: "{{ monitoring_plugins }}"
+  when: install_check_plugins

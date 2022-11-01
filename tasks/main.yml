@@ -1,0 +1,26 @@
+---
+
+- name: Internally note parents' names
+  run_once: yes
+  set_fact:
+    parent_inventory_names: "{{ (parent_inventory_names + [item.name]) if parent_inventory_names is defined else [item.name] }}"
+  with_items: "{{ parents }}"
+
+- name: Load os family specific variables
+  include_vars: "vars_{{ ansible_os_family | lower }}_family.yml"
+
+- name: Install
+  include_tasks: "install_{{ ansible_os_family | lower }}_family.yml"
+  when: inventory_hostname not in parent_inventory_names
+
+- name: Look for existing ticket on agent
+  become: yes
+  stat:
+    path: "/var/lib/icinga2/certs/ticket"
+  register: st
+
+- name: General configuration
+  include_tasks: "configure.yml"
+  when:
+    - inventory_hostname not in parent_inventory_names
+    - not st.stat.exists or force_setup

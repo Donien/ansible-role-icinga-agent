@@ -1,0 +1,16 @@
+---
+
+
+packages_url: "https://packages.icinga.com/"
+packages_key: "https://packages.icinga.com/icinga.key"
+
+backup_files:
+  - "/etc/icinga2/constants.conf"
+  - "/etc/icinga2/icinga2.conf"
+  - "/etc/icinga2/zones.conf"
+
+parents_information:
+  - ip: ""
+    fqdn: ""
+  - ip: ""
+    fqdn: ""

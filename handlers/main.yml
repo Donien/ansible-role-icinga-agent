@@ -1,0 +1,7 @@
+---
+
+- name: Restart icinga2
+  become: yes
+  systemd:
+    state: restarted
+    name: "icinga2"
