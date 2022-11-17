@@ -3,6 +3,7 @@
 web_user: "www-data"
 icinga2_user: "nagios"
 monitoring_plugins: "monitoring-plugins"
+monitoring_plugins_directory: "/usr/lib/nagios/plugins"
 
 repo:
   bin: "deb {{ packages_url }}{{ ansible_distribution | lower }} icinga-{{ ansible_distribution_release }} main"

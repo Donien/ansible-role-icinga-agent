@@ -13,14 +13,19 @@
   include_tasks: "install_{{ ansible_os_family | lower }}_family.yml"
   when: inventory_hostname not in parent_inventory_names
 
-- name: Look for existing ticket on agent
+- name: Look for existing cert on agent
   become: yes
   stat:
-    path: "/var/lib/icinga2/certs/ticket"
+    path: "/var/lib/icinga2/certs/ca.crt"
   register: st
 
-- name: General configuration
-  include_tasks: "configure.yml"
+- name: Initial Icinga 2 setup
+  include_tasks: "configure_initial_setup.yml"
   when:
     - inventory_hostname not in parent_inventory_names
     - not st.stat.exists or force_setup
+
+- name: Configuration
+  include_tasks: "configure.yml"
+  when:
+    - inventory_hostname not in parent_inventory_names

@@ -1,0 +1,29 @@
+{% for parent in parents %}
+object Endpoint "{{ parent.fqdn if parent.fqdn is defined else hostvars[parent.name].ansible_fqdn }}" {
+        host = "{{ parent.ip if parent.ip is defined else hostvars[parent.name].ansible_default_ipv4.address }}"
+        port = "{{ parent.icinga2_port if parent.icinga2_port is defined else icinga2_port }}"
+}
+
+{% endfor %}
+object Zone "{{ parent_zone }}" {
+        endpoints = [
+{%- for parent in parents %}
+ "{{ parent.fqdn if parent.fqdn is defined else hostvars[parent.name].ansible_fqdn }}", 
+{%- endfor %}
+ ]
+}
+
+object Endpoint "{{ ansible_fqdn }}" {
+}
+
+object Zone "{{ ansible_fqdn }}" {
+        endpoints = [ "{{ ansible_fqdn }}" ]
+        parent = "{{ parent_zone }}"
+}
+
+{% for zone in global_zones %}
+object Zone "{{ zone }}" {
+        global = true
+}
+
+{% endfor %}

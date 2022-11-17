@@ -1,0 +1,26 @@
+---
+
+- name: Retrieve trusted_crt
+  run_once:
+  delegate_to: "{{ ca_node.name }}"
+  block:
+  - name: "Save certificate to file on ca node ({{ ca_node.name }} / {{ hostvars[ca_node.name].ansible_fqdn }})"
+    become: yes
+    shell: "icinga2 pki save-cert --host {{ hostvars[ca_node.name].ansible_fqdn }} --trustedcert /tmp/trusted.crt"
+    changed_when: false
+  
+  - name: Read content of trusted.crt
+    slurp:
+      src: "/tmp/trusted.crt"
+    register: "trusted_crt"
+  
+  - name: base64 decode file content
+    set_fact:
+      trusted_crt: "{{ trusted_crt.content | b64decode }}"
+  
+  - name: Optionally compare trusted_crt with predefined crt
+    debug:
+    when: false
+  when:
+    - ca_node is defined
+    - trusted_crt is not defined

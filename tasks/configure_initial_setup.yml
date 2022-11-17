@@ -1,0 +1,61 @@
+---
+
+- name: Retrieve trusted_crt from ca_node
+  include_tasks: "get_trusted_cert.yml"
+  when:
+    - not trusted_crt is defined
+
+- name: Backup configuration files
+  become: yes
+  copy:
+    force: false
+    remote_src: true
+    mode: preserve
+    owner: "{{ icinga2_user }}"
+    group: "{{ icinga2_user }}"
+    src: "{{ item }}"
+    dest: "{{ item }}.orig"
+  with_items: "{{ backup_files }}"
+
+- name: Deploy trusted_crt on agent
+  copy:
+    content: "{{ trusted_crt }}"
+    dest: "/tmp/trusted.crt"
+
+- name: Generate ticket for agent
+  delegate_to: "{{ ca_node.name }}"
+  become: yes
+  shell: |
+    icinga2 pki ticket --cn {{ ansible_fqdn }}
+  changed_when: false
+  register: "ticket"
+  when:
+    - ca_node is defined
+    - use_tickets
+
+- name: Run node setup
+  become: yes
+  shell: |
+      icinga2 node setup \
+      {{ '--trustedcert /tmp/trusted.crt' }} \
+      {{ '--parent_host ' + ((parent1_ip, parent1_port) | join(',')) }} \
+      {{ '--ticket ' + ticket.stdout if ticket.stdout is defined }} \
+      {{ '--endpoint ' + ((parent1_fqdn, parent1_ip, parent1_port) | join(',')) }} \
+      {{ '--endpoint ' + ((parent2_fqdn, parent2_ip, parent2_port) | join(',')) if parents[1] is defined }} \
+      {{ '--zone ' + ansible_fqdn }} \
+      {{ '--cn ' + ansible_fqdn }} \
+      {% for zone in (global_zones | unique) %}
+        {{ '--global_zones ' + zone if not zone == 'director-global' and not zone == 'global-templates' }} \
+      {% endfor %}
+      {{ '--accept-config' if accept_config }} \
+      {{ '--accept-commands' if accept_commands }} \
+      {{ '--disable-confd' if disable_confd }}
+  vars:
+    parent1_fqdn: "{{ parents[0].fqdn if parents[0].fqdn is defined else hostvars[parents[0].name].ansible_fqdn }}"
+    parent2_fqdn: "{{ parents[1].fqdn if parents[1].fqdn is defined else (hostvars[parents[1].name].ansible_fqdn if parents[1] is defined) }}"
+    parent1_ip: "{{ parents[0].ip if parents[0].ip is defined else hostvars[parents[0].name].ansible_default_ipv4.address }}"
+    parent2_ip: "{{ parents[1].ip if parents[1].ip is defined else (hostvars[parents[1].name].ansible_default_ipv4.address if parents[1] is defined) }}"
+    parent1_port: "{{ parents[0].port if parents[0].port is defined else icinga2_port }}"
+    parent2_port: "{{ parents[1].port if parents[1].port is defined else (icinga2_port if parents[1] is defined) }}"
+  notify:
+    - "Restart icinga2"

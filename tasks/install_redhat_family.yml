@@ -1,0 +1,36 @@
+---
+
+- name: Install prerequisites
+  become: yes
+  yum:
+    state: present
+    pkg:
+      - "gnupg"
+      - "epel-release"
+
+- name: Add gpg key
+  become: yes
+  rpm_key:
+    key: "{{ packages_key }}"
+
+- name: Add repository
+  become: yes
+  yum_repository:
+    file: "ICINGA-release"
+    name: "icinga-stable-release"
+    description: "ICINGA (stable release)"
+    baseurl: "{{ repo }}"
+
+- name: Install Icinga 2
+  become: yes
+  yum:
+    state: present
+    update_cache: true
+    name: "icinga2"
+
+- name: Install monitoring plugins
+  become: yes
+  yum:
+    state: present
+    name: "{{ monitoring_plugins }}"
+  when: install_check_plugins

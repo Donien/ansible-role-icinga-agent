@@ -1,0 +1,8 @@
+---
+
+web_user: "www-data"
+icinga2_user: "icinga"
+monitoring_plugins: "nagios-plugins-all"
+monitoring_plugins_directory: "/usr/lib64/nagios/plugins"
+
+repo: "https://packages.icinga.com/epel/$releasever/release/"
